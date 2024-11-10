@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
+from dotenv import load_dotenv
 import uuid
 from contextlib import asynccontextmanager
 
@@ -13,6 +14,8 @@ from library.opus_translator import OpusTranslator
 from library.M2M100_translator import M2M100Translator
 from library.nllb_translator import NLLBTranslator
 from library.madlad_translator import MadladTranslator
+from library.hf_seamless_m4t import SeamlessTranslator
+from library.faseeh_translator import FaseehTranslator
 from library.subtitle_processor import SubtitleProcessor
 
 from enum import Enum
@@ -24,15 +27,20 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Load environment variables
+load_dotenv()
+# Get origins from .env and split into list
+origins = os.getenv("CORS_ORIGINS", "").split(",")
+
 # Configure CORS
-origins = [
-    "http://localhost:15571",
-    "http://127.0.0.1:15571",
-    "https://translator.nakrad.org",
-    "http://translator.nakrad.org",
-    "https://translator-server.nakrad.org",
-    "http://translator-server.nakrad.org",
-]
+# Fallback if env variable is not set
+if not origins or origins == [""]:
+    origins = [
+        "http://localhost:15571",
+        "http://127.0.0.1:15571",
+        "http://0.0.0.0:15571",
+        "https://0.0.0.0:15571",
+    ]
 # CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
@@ -51,6 +59,9 @@ class AIModel(str, Enum):
     M2M100 = "m2m100"
     NLLB = "nllb"
     MADLAD = "madlad"
+    SEAMLESS = "seamless"
+    DARIJA = "darija"
+    FASEEH = "faseeh"
 
 
 class TranslationRequest(BaseModel):
@@ -131,6 +142,19 @@ def get_translator(source_lang: str, target_lang: str, model: AIModel):
         # model_name = "google/madlad400-3b-mt"
         model_name = "santhosh/madlad400-3b-ct2"
         translator = MadladTranslator(model_name, config)
+
+    elif model == AIModel.SEAMLESS:
+        # model_name = "facebook/hf-seamless-m4t-large"
+        model_name = "facebook/hf-seamless-m4t-medium"
+        translator = SeamlessTranslator(model_name, config)
+
+    elif model == AIModel.DARIJA:
+        # model_name = f"lachkarsalim/Helsinki-translation-English_Moroccan-Arabic"
+        model_name = "Trabis/Helsinki-NLPopus-mt-tc-big-en-moroccain_dialect"
+        translator = OpusTranslator(model_name, config)
+    elif model == AIModel.FASEEH:
+        model_name = "Abdulmohsena/Faseeh"
+        translator = FaseehTranslator(model_name, config)
 
     translator.load_model()
     return translator
@@ -216,7 +240,11 @@ def process_translation(
     try:
         translator = get_translator(source_lang, target_lang, model)
         processor = SubtitleProcessor(
-            translator=translator, batch_size=batch_size, batch_processing=True
+            translator=translator,
+            batch_size=batch_size,
+            batch_processing=False,
+            source_lang=source_lang,
+            target_lang=target_lang,
         )
 
         processor.process_file(
@@ -251,6 +279,7 @@ async def translate_text(request: TranslationRequest):
             translated_text = translated_text[0] if translated_text else ""
         return TranslationResponse(translated_text=translated_text)
     except Exception as e:
+        print(f"An error occurred: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

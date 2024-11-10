@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type AIModel = "opus" | "m2m100" | "nllb";
+import { AIModel } from "@/types/ai-model";
 
 interface AIModelSelectorProps {
   selectedModel: AIModel;
@@ -34,6 +34,9 @@ export function AIModelSelector({
           <SelectItem value="m2m100">M2M100</SelectItem>
           <SelectItem value="nllb">NLLB</SelectItem>
           <SelectItem value="madlad">MADLAD</SelectItem>
+          <SelectItem value="seamless">SEAMLESS</SelectItem>
+          <SelectItem value="darija">Moroccan Darija</SelectItem>
+          <SelectItem value="faseeh">Faseeh</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -155,6 +155,26 @@ subtitle_AI_translator/
 └── uv.lock
 ```
 
+## Features
+
+### Text Translation
+
+![Text Translation Interface](screenshots/text_translation.png)
+
+- Support for multiple languages
+- Real-time translation
+- Copy/paste functionality
+- Text-to-speech support
+
+### Subtitle Translation
+
+![Subtitle Translation Interface](screenshots/subtitle_translation.png)
+
+- SRT, VTT and SUB file support
+- Batch processing
+- Preview and edit translations
+- Export to SRT format
+
 ## Performance Expectations
 
 - **GPU Version**: Faster translation speeds, recommended for large subtitle files

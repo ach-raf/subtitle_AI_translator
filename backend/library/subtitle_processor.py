@@ -11,8 +11,17 @@ class Subtitle:
 
 
 class SubtitleProcessor:
-    def __init__(self, translator, batch_size: int = 5, batch_processing: bool = False):
+    def __init__(
+        self,
+        translator,
+        source_lang: str = "en",
+        target_lang: str = "ar",
+        batch_size: int = 5,
+        batch_processing: bool = False,
+    ):
         self.translator = translator
+        self.source_lang = source_lang
+        self.target_lang = target_lang
         self.batch_size = batch_size
         self.batch_processing = batch_processing
 
@@ -39,7 +48,11 @@ class SubtitleProcessor:
 
                 # Process when batch is full or at the end
                 if len(model_inputs) == self.batch_size or i == total_subtitles - 1:
-                    translations = self.translator.batch_translate(model_inputs)
+                    translations = self.translator.batch_translate(
+                        model_inputs,
+                        source_lang=self.source_lang,
+                        target_lang=self.target_lang,
+                    )
 
                     # Process translations
                     for translated_text in translations:
@@ -61,7 +74,9 @@ class SubtitleProcessor:
             return subtitles
 
     def _process_batch(self, texts: List[str]) -> List[str]:
-        translations = self.translator.batch_translate(texts)
+        translations = self.translator.batch_translate(
+            texts, source_lang=self.source_lang, target_lang=self.target_lang
+        )
         return [self._format_translation(t) for t in translations]
 
     def _individual_process_subtitles(
@@ -71,7 +86,11 @@ class SubtitleProcessor:
 
         for i, subtitle in enumerate(subtitles):
             print(f"Processing subtitle {subtitle.index}/{total_subtitles}")
-            translation = self.translator.translate(subtitle.text)
+            translation = self.translator.translate(
+                subtitle.text,
+                source_lang=self.source_lang,
+                target_lang=self.target_lang,
+            )
 
             if isinstance(translation, list):
                 translation = translation[0]

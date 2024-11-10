@@ -19,9 +19,9 @@ class ModelHandler:
                     "flax_model.msgpack",
                     "tf_model.h5",
                     "rust_model.ot",
-                    "model.safetensors",
                     "model.npz.best-chrf.npz",
                     "325orch_model.bin",
+                    "optimizer.pt",
                 ]
 
                 # Download only the necessary files

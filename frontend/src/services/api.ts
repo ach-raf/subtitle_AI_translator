@@ -1,8 +1,6 @@
 import axios from "axios";
-
-const API_BASE_URL = "https://translator-server.nakrad.org";
-
-export type AIModel = "opus" | "m2m100" | "nllb";
+import { AIModel } from "@/types/ai-model";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 export const translateText = async (
   text: string,
@@ -69,7 +67,7 @@ export const translateSubtitle = async (
       batch_size: batchSize,
     },
     {
-      timeout: 60000, // Increase to 60 seconds, adjust as needed
+      timeout: 120000, // Increase to 120 seconds, adjust as needed
     }
   );
   return response.data;

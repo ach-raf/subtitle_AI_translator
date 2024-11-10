@@ -2,8 +2,10 @@ ctranslate2==4.4.0
 fastapi==0.115.0
 huggingface-hub==0.26.1
 protobuf==5.28.2
-python-multipart==0.0.16
+python-multipart==0.0.17
 sacremoses==0.1.1
 sentencepiece==0.2.0
 transformers==4.45.1
 uvicorn==0.32.0
+accelerate==1.1.1
+python-dotenv==1.0.1

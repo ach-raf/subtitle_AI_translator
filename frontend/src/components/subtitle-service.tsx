@@ -16,11 +16,12 @@ import {
   translateSubtitle,
   downloadSubtitle,
   fetchTranslatedSubtitles,
-  AIModel,
 } from "@/services/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { languages } from "@/models/languages";
+import { languages } from "@/types/languages";
 import SubtitleDisplayComponent from "@/components/subtitle-display";
+import { AIModel } from "@/types/ai-model";
+import { AIModelSelector } from "@/components/ai-model-selector";
 
 interface SubtitleServiceComponentProps {
   selectedModel: AIModel;
@@ -45,7 +46,6 @@ export function SubtitleServiceComponent({
   const [uniqueFilename, setUniqueFilename] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [showTranslationSection, setShowTranslationSection] = useState(false);
-  const [isTranslating, setIsTranslating] = useState(false);
   const translationSectionRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -67,7 +67,6 @@ export function SubtitleServiceComponent({
   }, [showTranslationSection]);
 
   const clearAll = () => {
-    setFile(null);
     setInputSubtitles("");
     setTranslatedSubtitles("");
     setOutputFileName("");
@@ -80,29 +79,32 @@ export function SubtitleServiceComponent({
     setOutputFileName("");
   };
 
-  const processFile = async (uploadedFile: File) => {
-    setFile(uploadedFile);
-    try {
-      const result = await uploadSubtitle(uploadedFile);
-      setUniqueFilename(result.unique_filename);
-      toast({
-        title: "File uploaded",
-        description: "Subtitle file has been uploaded successfully.",
-      });
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setInputSubtitles(e.target?.result as string);
-        setShowTranslationSection(true);
-      };
-      reader.readAsText(uploadedFile);
-    } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: "An error occurred while uploading the file.",
-        variant: "destructive",
-      });
-    }
-  };
+  const processFile = useCallback(
+    async (uploadedFile: File) => {
+      setFile(uploadedFile);
+      try {
+        const result = await uploadSubtitle(uploadedFile);
+        setUniqueFilename(result.unique_filename);
+        toast({
+          title: "File uploaded",
+          description: "Subtitle file has been uploaded successfully.",
+        });
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setInputSubtitles(e.target?.result as string);
+          setShowTranslationSection(true);
+        };
+        reader.readAsText(uploadedFile);
+      } catch (error) {
+        toast({
+          title: "Upload failed",
+          description: "An error occurred while uploading the file.",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast]
+  );
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFile = event.target.files?.[0];
@@ -121,21 +123,23 @@ export function SubtitleServiceComponent({
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-    const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile) {
-      processFile(droppedFile);
-    }
-  }, []);
+      const droppedFile = e.dataTransfer.files[0];
+      if (droppedFile) {
+        processFile(droppedFile);
+      }
+    },
+    [processFile]
+  );
 
   const handleTranslate = async () => {
     if (!uniqueFilename || !targetLanguage) return;
 
     setIsProcessing(true);
-    setIsTranslating(true);
     try {
       const result = await translateSubtitle(
         uniqueFilename,
@@ -159,7 +163,6 @@ export function SubtitleServiceComponent({
               description: "Subtitles have been translated successfully.",
             });
             clearInterval(intervalId); // Stop polling once translation is complete
-            setIsTranslating(false);
           }
         } catch (pollError) {
           // Translation is still processing, continue polling
@@ -173,7 +176,6 @@ export function SubtitleServiceComponent({
         description: "An error occurred while translating the subtitles.",
         variant: "destructive",
       });
-      setIsTranslating(false);
     } finally {
       setIsProcessing(false);
     }
@@ -334,17 +336,10 @@ export function SubtitleServiceComponent({
                 >
                   AI Model
                 </Label>
-                <Select value={selectedModel} onValueChange={onModelChange}>
-                  <SelectTrigger className="w-full mt-2">
-                    <SelectValue placeholder="Select an AI model" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="opus">OPUS</SelectItem>
-                    <SelectItem value="m2m100">M2M100</SelectItem>
-                    <SelectItem value="nllb">NLLB</SelectItem>
-                    <SelectItem value="madlad">MADLAD</SelectItem>
-                  </SelectContent>
-                </Select>
+                <AIModelSelector
+                  selectedModel={selectedModel}
+                  onModelChange={onModelChange}
+                />
               </div>
             </div>
 
@@ -354,7 +349,6 @@ export function SubtitleServiceComponent({
                 translatedSubtitles={translatedSubtitles}
                 onClearInput={() => {
                   setInputSubtitles("");
-                  setFile(null);
                   setUniqueFilename("");
                 }}
                 onClearOutput={clearTranslation}

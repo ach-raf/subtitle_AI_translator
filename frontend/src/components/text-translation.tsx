@@ -13,10 +13,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { ArrowRightLeft, Copy, Wand2, Eraser, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { translateText, AIModel } from "@/services/api";
-import { languages } from "@/models/languages";
+import { translateText } from "@/services/api";
+import { languages } from "@/types/languages";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { AIModel } from "@/types/ai-model";
+import { AIModelSelector } from "@/components/ai-model-selector";
 
 const LOCAL_STORAGE_KEYS = {
   SOURCE_TEXT: "sourceText",
@@ -246,17 +248,10 @@ export function TextTranslationComponent({
               </Select>
             </div>
             <div className="flex items-center space-x-4">
-              <Select value={selectedModel} onValueChange={onModelChange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="AI Model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="opus">OPUS</SelectItem>
-                  <SelectItem value="m2m100">M2M100</SelectItem>
-                  <SelectItem value="nllb">NLLB</SelectItem>
-                  <SelectItem value="madlad">MADLAD</SelectItem>
-                </SelectContent>
-              </Select>
+              <AIModelSelector
+                selectedModel={selectedModel}
+                onModelChange={onModelChange}
+              />
               <Button
                 onClick={handleTranslate}
                 disabled={
